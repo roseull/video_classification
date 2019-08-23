@@ -104,9 +104,12 @@ def read_image_folder(csv_name,image_folder):
 # read video, split video to frames and save the images to the correspoding imageset
 def read_video(csv_name_video,video_name,image_set_name):
     vid = imageio.get_reader(video_name,'ffmpeg')
+    count = 0
     for num,im in enumerate(vid):
-        imageio.imwrite(image_set_name+'/frame%d.jpg'%num,im)
-        write_csv_video(csv_name_video,'frame%d'%num,image_set_name)
+        if num%40==0:
+            imageio.imwrite(image_set_name+'/frame%d.jpg'%count,im)
+            write_csv_video(csv_name_video,'frame%d'%count,image_set_name)
+            count+=1
         
 if __name__== "__main__":        
     # preprocessing the data
@@ -175,19 +178,19 @@ if __name__== "__main__":
     #model.add(Dropout(0.5))    
     # output layer, the number of class is len(y_one_hot[0])
     model.add(Dense(len(y_one_hot[0]), activation=(tf.nn.softmax))) 
-    """
-    #use GPU to compile the model    
-    KTF.set_session(tf.Session(config=tf.ConfigProto(device_count={'gpu':0})))
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     
-    #save best weights,handle imbalance data
-    class_weights = compute_class_weight('balanced',np.unique(data.Class), data.Class)  # computing weights of different classes    
-    filepath="weights.best.hdf5"
-    checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
-    callbacks_list = [checkpoint]      # model check pointing based on validation loss
-    model.fit(X_train, y_train, epochs=100, validation_data=(X_test, y_test), class_weight=class_weights, callbacks=callbacks_list,batch_size=32)
-    """
-    model.load_weights("weights.best.20.hdf5")
+    # #use GPU to compile the model    
+    # KTF.set_session(tf.Session(config=tf.ConfigProto(device_count={'gpu':0})))
+    # model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    
+    # #save best weights,handle imbalance data
+    # class_weights = compute_class_weight('balanced',np.unique(data.Class), data.Class)  # computing weights of different classes    
+    # filepath="weights.best.hdf5"
+    # checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+    # callbacks_list = [checkpoint]      # model check pointing based on validation loss
+    # model.fit(X_train, y_train, epochs=100, validation_data=(X_test, y_test), class_weight=class_weights, callbacks=callbacks_list,batch_size=32)
+    
+    model.load_weights("weights.best.hdf5")
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     
     #model.fit(X_train, y_train, epochs=100, validation_data=(X_test, y_test),batch_size=32)
@@ -257,4 +260,5 @@ if __name__== "__main__":
         label_video = str(max_class)
         # write the final result
         write_csv_result(csv_name_result,filename,label_video)
+    
     
